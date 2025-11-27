@@ -50,7 +50,7 @@ public class AuthManager {
             newSession.save();
 
             userRecord.updateTimestamp("last_seen");
-
+            User.updateOnlineStatus(userRecord.getUserId(), true);
             return new AuthResult(true, "SUCCESS", userRecord.getUserId(), sessionToken);
         }
 
