@@ -1,19 +1,10 @@
 package com.example.chat.server;
 
-<<<<<<< HEAD
-public class ConversationManager {
-
-// Fetch user’s conversations
-// Create 1-on-1 or group conversations
-// Add/remove participants in group
-
-=======
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.ArrayList;
 
 public class ConversationManager {
 
@@ -191,5 +182,4 @@ public class ConversationManager {
             throw e;
         }
     }
->>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b
 }

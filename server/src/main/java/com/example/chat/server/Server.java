@@ -1,15 +1,5 @@
 package com.example.chat.server;
-<<<<<<< HEAD
 
-public class Server {
-
-// Starting ServerSocket
-// Accepting incoming client sockets
-// Creating a new ClientHandler per client
-// Listen on port
-// Managing a list of connected clients
-
-=======
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -91,5 +81,4 @@ public class Server {
             System.err.println("Error during shutdown: " + e.getMessage());
         }
     }
->>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b
 }

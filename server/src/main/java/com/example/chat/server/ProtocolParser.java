@@ -1,11 +1,5 @@
 package com.example.chat.server;
 
-<<<<<<< HEAD
-public class ProtocolParser {
-
-// Takes JSON → returns a Command object
-// Prevents bloating ClientHandler
-=======
 /**
  * Protocol parser for newline-delimited JSON commands.
  * 
@@ -89,6 +83,5 @@ public class ProtocolParser {
         if (s == null) return null;
         return s.replace("\\\"", "\"").replace("\\\\", "\\").replace("\\n", "\n");
     }
->>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b
 
 }

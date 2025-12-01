@@ -1,18 +1,5 @@
 package com.example.chat.server;
 
-<<<<<<< HEAD
-
-public class ClientHandler implements Runnable {
-
-// For each connected client:
-// Reading newline-delimited frames from socket
-// Parsing JSON command
-// call AuthManager, SessionManager, MessageRouter
-// Sending responses back to the client
-// Closing connection on logout or disconnect
-
-}
-=======
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.List;
@@ -385,4 +372,3 @@ public class ClientHandler implements Runnable {
         return this.socket;
     }
 }
->>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b

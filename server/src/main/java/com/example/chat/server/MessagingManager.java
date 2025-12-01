@@ -1,15 +1,5 @@
 package com.example.chat.server;
 
-<<<<<<< HEAD
-public class MessagingManager {
-
-// also called MessageRouter
-// send to specific user
-// save messages in DB
-// push to multiple recipients (groups)
-// handle offline messages (i think it is optional)
-
-=======
 import java.sql.SQLException;
 import java.util.*;
 
@@ -185,5 +175,4 @@ public class MessagingManager {
             + "\",\"content\":\"" + ProtocolParser.escape(content) 
             + "\",\"conversationId\":\"" + ProtocolParser.escape(conversationId) + "\"}";
     }
->>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b
 }

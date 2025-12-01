@@ -74,8 +74,6 @@ public class UserSession {
         }
     }
 
-<<<<<<< HEAD
-=======
     public static UserSession findTokenByUsername(String username) throws SQLException {
         if (db == null)
             return null;
@@ -104,7 +102,6 @@ public class UserSession {
         }
     }
 
->>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b
     public void save() throws SQLException {
         if (db == null) {
             System.err.println("DB Error: Database connection not initialized for UserSession.");

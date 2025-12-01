@@ -61,8 +61,6 @@ public class SessionManager {
         }
     }
 
-<<<<<<< HEAD
-=======
     public boolean endSessionByUsername(String username) {
         if (username == null || username.isEmpty()) {
             return false;
@@ -86,7 +84,6 @@ public class SessionManager {
         }
     }
 
->>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b
     public boolean updateOnlineStatus(String userId, boolean isOnline) {
         if (userId == null || userId.isEmpty()) {
             return false;

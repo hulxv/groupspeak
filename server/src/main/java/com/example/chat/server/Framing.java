@@ -1,14 +1,13 @@
 package com.example.chat.server;
 
-<<<<<<< HEAD
-public class Framing {
-
-// TCP DOESN'T PRESERVE message boundaries.
-// so --> newline-delimited JSON
-// readFrame & writeFrame methods
-
-=======
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Handles TCP frame reading/writing using newline-delimited JSON.
@@ -88,5 +87,4 @@ public class Framing {
     public boolean isReady() throws IOException {
         return reader.ready();
     }
->>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b
 }
