@@ -24,7 +24,7 @@ public class Conversation {
         this.createdAt = LocalDateTime.now().toString();
     }
 
-    private Conversation(String conversationId, String name, int isGroup, String createdAt) {
+    Conversation(String conversationId, String name, int isGroup, String createdAt) {
         this.conversationId = conversationId;
         this.name = name;
         this.isGroup = isGroup;
@@ -86,7 +86,7 @@ public class Conversation {
 
     public static List<Conversation> findConversationsByUserId(String userId) {
         if (db == null)
-            return List.of();
+            return new ArrayList<>();
 
         // SQL JOIN to link USERS -> CONVERSATION_PARTICIPANTS -> CONVERSATIONS
         String sql = "SELECT c.* FROM CONVERSATIONS c " +

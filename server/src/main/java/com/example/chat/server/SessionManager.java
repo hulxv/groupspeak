@@ -61,6 +61,32 @@ public class SessionManager {
         }
     }
 
+<<<<<<< HEAD
+=======
+    public boolean endSessionByUsername(String username) {
+        if (username == null || username.isEmpty()) {
+            return false;
+        }
+
+        try {
+            UserSession sessionRecord = UserSession.findTokenByUsername(username);
+
+            if (sessionRecord == null) {
+                return true;
+            }
+
+            String userId = sessionRecord.getUserId();
+            sessionRecord.delete();
+
+            return this.updateOnlineStatus(userId, false);
+
+        } catch (SQLException e) {
+            System.err.println("SessionManager: Database error during session termination: " + e.getMessage());
+            return false;
+        }
+    }
+
+>>>>>>> 75e807f967c1fbdffe781ffec99d1eb2c60dc43b
     public boolean updateOnlineStatus(String userId, boolean isOnline) {
         if (userId == null || userId.isEmpty()) {
             return false;

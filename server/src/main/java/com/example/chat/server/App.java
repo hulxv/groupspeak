@@ -10,9 +10,26 @@ public class App {
         UserSession.initialize(db);
         Conversation.initialize(db);
         ConversationParticipant.initialize(db);
+        ConversationManager.initialize(db);
         Message.initialize(db);
 
-        AuthManager authManager = new AuthManager();
+        Server server = new Server(5001);
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+        public void run() {
+            try {
+                Thread.sleep(200);
+                System.out.printf("\nShutting down ...\n");
+                server.shutdown();
+
+            } catch (Exception e) {
+                Thread.currentThread().interrupt();
+                // e.printStackTrace();
+            }
+        }
+    });
+
+        server.start();
 
     }
 }

@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ConversationParticipant {
     private String participantId;
@@ -73,6 +75,32 @@ public class ConversationParticipant {
             System.err.println("DB Error checking participant status: " + e.getMessage());
             return false;
         }
+    }
+
+    public static List<ConversationParticipant> findByConversationId(String conversationId) {
+        if (db == null)
+            return new ArrayList<>();
+
+        String sql = "SELECT * FROM CONVERSATION_PARTICIPANTS WHERE conversation_id = ?";
+        List<ConversationParticipant> participants = new ArrayList<>();
+
+        try (Connection conn = db.connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, conversationId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                participants.add(new ConversationParticipant(
+                        rs.getString("participant_id"),
+                        rs.getString("conversation_id"),
+                        rs.getString("user_id"),
+                        rs.getString("joined_at")));
+            }
+        } catch (SQLException e) {
+            System.err.println("DB Error finding participants by conversation: " + e.getMessage());
+        }
+        return participants;
     }
 
     public String getConversationId() {
