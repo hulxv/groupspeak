@@ -19,6 +19,8 @@ public class UserSession {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static SQLiteDatabase db;
 
+    public UserSession() {}
+
     public UserSession(String userId, String sessionToken) {
         this.sessionId = UUID.randomUUID().toString();
         this.userId = userId;
@@ -53,6 +55,34 @@ public class UserSession {
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, sessionToken);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new UserSession(
+                        rs.getString("session_id"),
+                        rs.getString("user_id"),
+                        rs.getString("session_token"),
+                        rs.getString("device_info"),
+                        rs.getString("created_at"),
+                        rs.getString("expires_at"),
+                        rs.getString("last_activity"));
+            }
+            return null;
+        } catch (SQLException e) {
+            System.err.println("DB Error finding session by token: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    public static UserSession findTokenByUsername(String username) throws SQLException {
+        if (db == null)
+            return null;
+        String sql = "SELECT USER_SESSIONS.* FROM USERS JOIN USER_SESSIONS ON USER_SESSIONS.user_id = USERS.user_id WHERE username = ?";
+
+        try (Connection conn = db.connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
