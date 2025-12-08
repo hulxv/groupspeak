@@ -188,6 +188,13 @@ public class ChatHandler {
         conn.send(request);
     }
 
+    public void reloadConversationsForUser(String userId) throws IOException {
+        String request = buildReloadConversationsRequest(userId);
+        Connection conn = ClientState.getInstance().getConnection();
+        if (conn == null) throw new IOException("Not Connected to Server");
+        conn.send(request);
+    }
+
     // ==================================================================
     //                            UTILITIES
     // ==================================================================

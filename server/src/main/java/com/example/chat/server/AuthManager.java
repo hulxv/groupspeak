@@ -13,9 +13,8 @@ public class AuthManager {
     }
 
     public AuthResult registerUser(String username, String password, String displayName, String email) {
-
         if (User.userExists(username)) {
-            return new AuthResult(false, "User already exists", null, null);
+            return new AuthResult(false, "User already exists", null, null, null, null);
         }
 
         try {
@@ -25,40 +24,44 @@ public class AuthManager {
             User newUser = new User(newUserId, username, email, hashedPassword, displayName);
             newUser.save();
 
-            return new AuthResult(true, "SUCCESS", newUser.getUserId(), null);
+            return new AuthResult(true, "SUCCESS", newUser.getUserId(), null, displayName, email);
         } catch (SQLException e) {
             System.err.println("Error during registration: " + e.getMessage());
-            return new AuthResult(false, "Database error during registration.", null, null);
+            return new AuthResult(false, "Database error during registration.", null, null, null, null);
         }
     }
 
     public AuthResult authenticate(String username, String password, String deviceInfo) throws SQLException {
-
         User userRecord = User.findByUsername(username);
 
         if (userRecord == null) {
-            return new AuthResult(false, "Invalid credentials", null, null);
+            return new AuthResult(false, "Invalid credentials", null, null, null, null);
         }
 
         if (verifyPassword(password, userRecord.getPasswordHash())) {
-
             String sessionToken = generateRandomToken();
 
-            UserSession newSession = new UserSession(
-                    userRecord.getUserId(),
-                    sessionToken);
+            UserSession newSession = new UserSession(userRecord.getUserId(), sessionToken);
             newSession.save();
 
             userRecord.updateTimestamp("last_seen");
             User.updateOnlineStatus(userRecord.getUserId(), true);
-            
+
             // Broadcast online status
             MessagingManager.broadcastUserStatus(userRecord.getUserId(), true);
-            
-            return new AuthResult(true, "SUCCESS", userRecord.getUserId(), sessionToken);
+
+            // Return success with all user details including email and displayName
+            return new AuthResult(
+                true, 
+                "SUCCESS", 
+                userRecord.getUserId(), 
+                sessionToken, 
+                userRecord.getDisplayName(), 
+                userRecord.getEmail()
+            );
         }
 
-        return new AuthResult(false, "Invalid credentials", null, null);
+        return new AuthResult(false, "Invalid credentials", null, null, null, null);
     }
 
     private String hashPassword(String password) {
@@ -81,12 +84,17 @@ public class AuthManager {
         public final String message;
         public final String userId;
         public final String sessionToken;
+        public final String displayName;
+        public final String email;
 
-        public AuthResult(boolean success, String message, String userId, String sessionToken) {
+        public AuthResult(boolean success, String message, String userId, String sessionToken, String displayName, String email) {
             this.success = success;
             this.message = message;
             this.userId = userId;
             this.sessionToken = sessionToken;
+            this.displayName = displayName;
+            this.email = email;
         }
     }
 }
+

@@ -131,6 +131,9 @@ public class LoginScene extends Scene {
             state.setSessionToken(response.sessionToken);
             state.setCurrentUserId(response.userId);
             state.setCurrentUsername(user);
+
+            state.setCurrentDisplayName(response.displayName != null ? response.displayName : user);
+            state.setCurrentEmail(response.email != null ? response.email : "unknown@example.com");
             
             stage.setScene(new ChatScene());
         } else {

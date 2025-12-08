@@ -77,6 +77,10 @@ public class ClientHandler implements Runnable {
                         handleRemoveParticipant(frame);
                         break;
 
+                    case "reload_conversations":
+                        handleReloadConversations(frame);
+                        break;
+
                     case "send_dm":
                         handleSendDmMessage(frame);
                         break;
@@ -127,10 +131,11 @@ public class ClientHandler implements Runnable {
                 MessagingManager.registerClient(res.userId, this);
                 
                 ProtocolParser.sendRaw("{\"type\":\"login_response\", \"success\":true, \"userId\":\"" + ProtocolParser.escape(res.userId)
-                        + "\",\"sessionToken\":\"" + ProtocolParser.escape(res.sessionToken) + "\"}", framing);
-            }
+                        + "\",\"sessionToken\":\"" + ProtocolParser.escape(res.sessionToken)
+                        + "\",\"displayName\":\"" + ProtocolParser.escape(res.displayName)
+                        + "\",\"email\":\"" + ProtocolParser.escape(res.email) + "\"}", framing);
 
-            else {
+            } else {
                 ProtocolParser.sendRaw("{\"type\":\"login_response\",\"success\":false,\"message\":\"" + ProtocolParser.escape(res.message) + "\"}", framing);
             }
         }
@@ -343,6 +348,13 @@ public class ClientHandler implements Runnable {
         try {
             ConversationManager.addParticipant(conversationId, userId);
             ProtocolParser.sendRaw("{\"type\":\"add_participant_response\",\"success\":true}", framing);
+
+            List<String> userIds = new java.util.ArrayList<>();
+            for (ConversationParticipant cp : ConversationParticipant.findByConversationId(conversationId)) {
+                userIds.add(cp.getUserId());
+            }
+            
+            MessagingManager.notifyNewConversation(Conversation.findById(conversationId), userIds);
         } catch (Exception e) {
             ProtocolParser.sendError("server_error", "Failed to add participant: " + e.getMessage(), framing);
         }
@@ -365,6 +377,19 @@ public class ClientHandler implements Runnable {
         try {
             ConversationManager.removeParticipant(conversationId, userId);
             ProtocolParser.sendRaw("{\"type\":\"remove_participant_response\",\"success\":true}", framing);
+            
+            // Notify the removed user to reload their conversations
+            MessagingManager.notifyReloadConversations(userId);
+
+            // Notify remaining participants to reload as well, to update participant list
+            List<String> userIds = new java.util.ArrayList<>();
+            for (ConversationParticipant cp : ConversationParticipant.findByConversationId(conversationId)) {
+                userIds.add(cp.getUserId());
+            }
+            for(String remainingUserId : userIds) {
+                MessagingManager.notifyReloadConversations(remainingUserId);
+            }
+
         } catch (Exception e) {
             ProtocolParser.sendError("server_error", "Failed to remove participant: " + e.getMessage(), framing);
         }
@@ -410,6 +435,16 @@ public class ClientHandler implements Runnable {
         Server.removeClient(this);
         ProtocolParser.sendRaw("{\"type\":\"exit_response\",\"success\":true}", framing);
         running = false;
+    }
+
+    private void handleReloadConversations(String frame) {
+        String targetUserId = ProtocolParser.extractJsonString(frame, "userId");
+        if (targetUserId == null) {
+            ProtocolParser.sendError("invalid_args", "'userId' required", framing);
+            return;
+        }
+
+        MessagingManager.notifyReloadConversations(targetUserId);
     }
 
     private void cleanup() {

@@ -103,14 +103,14 @@ public class ProtocolHandler {
         return json;
     }
 
-    public static String buildAddParticipantRequest(String conversationId, String participantId) {
+    public static String buildAddParticipantRequest(String conversationId, String userId) {
         return "{\"type\":\"add_participant\",\"conversationId\":\"" + escape(conversationId)
-                + "\",\"participantId\":\"" + escape(participantId) + "\"}";
+                + "\",\"userId\":\"" + escape(userId) + "\"}";
     }
 
-    public static String buildRemoveParticipantRequest(String conversationId, String participantId) {
+    public static String buildRemoveParticipantRequest(String conversationId, String userId) {
         return "{\"type\":\"remove_participant\",\"conversationId\":\"" + escape(conversationId)
-                + "\",\"participantId\":\"" + escape(participantId) + "\"}";
+                + "\",\"userId\":\"" + escape(userId) + "\"}";
     }
 
     public static String buildSendDmRequest(String conversationId, String senderId, String content,
@@ -125,10 +125,13 @@ public class ProtocolHandler {
                 + escape(senderId) + "\",\"content\":\"" + escape(content) + "\"}";
     }
 
+    public static String buildReloadConversationsRequest(String userId) {
+        return "{\"type\":\"reload_conversations\",\"userId\":\"" + escape(userId) + "\"}";
+    }
+
     public static String buildPingRequest() {
         return "{\"type\":\"7ekey\"}";
     }
-
     // Response parsers
     public static class Response {
         public boolean success;
@@ -151,6 +154,8 @@ public class ProtocolHandler {
     public static class LoginResponse extends Response {
         public String userId;
         public String sessionToken;
+        public String displayName;
+        public String email;
     }
 
     public static LoginResponse parseLoginResponse(String json) {
@@ -159,6 +164,8 @@ public class ProtocolHandler {
         resp.userId = extractJsonString(json, "userId");
         resp.sessionToken = extractJsonString(json, "sessionToken");
         resp.message = extractJsonString(json, "message");
+        resp.displayName = extractJsonString(json, "displayName");
+        resp.email = extractJsonString(json, "email");
         return resp;
     }
 

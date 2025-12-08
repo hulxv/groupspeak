@@ -2,6 +2,7 @@ package org.openjfx.scenes;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -236,6 +237,9 @@ public class ChatScene extends Scene {
 
             // 2. Load conversations
             List<Conversation> conversations = chatHandler.getConversations();
+            String myIdRaw = state.getCurrentUserId();
+            String myId_ = (myIdRaw == null) ? "" : myIdRaw.trim();
+
             for (Conversation conv : conversations) {
                 Contact c = new Contact(conv.id, conv.name, getNameColor(conv.name), null, conv.isGroup, false);
 
@@ -249,6 +253,8 @@ public class ChatScene extends Scene {
                         }
                     }
                 }
+
+                c.participants.removeIf(u -> u.id.equalsIgnoreCase(myId_));
 
                 // Determine online status for 1-on-1
                 if (!c.isGroup && !c.participants.isEmpty()) {
@@ -291,6 +297,9 @@ public class ChatScene extends Scene {
                     } else if (line.contains("\"type\":\"new_conversation\"")) {
                         System.out.println("DEBUG: Received new_conversation event: " + line);
                         Platform.runLater(() -> handleNewConversation(line));
+                    } else if (line.contains("\"type\":\"reload_conversations\"")) {
+                        System.out.println("DEBUG: Received reload_conversations event: " + line);
+                        Platform.runLater(() -> handleReloadConversations(line));
                     } else {
                         // It's a response to a request, put in queue
                         ClientState.getInstance().getResponseQueue().put(line);
@@ -304,53 +313,22 @@ public class ChatScene extends Scene {
         listenerThread.start();
     }
 
-    private void handleNewConversation(String json) {
-        NewConversationEvent evt = ProtocolHandler.parseNewConversationEvent(json);
-        if (evt.id == null) return;
-
-        // Check if already exists
-        boolean exists = allContacts.stream().anyMatch(c -> c.id.equals(evt.id));
-        if (exists) return;
-
-        // Create new Contact
-        Contact c = new Contact(evt.id, evt.name, getNameColor(evt.name), null, evt.isGroup, false);
-        
-        // Fetch users to resolve participants
+    private void handleReloadConversations(String json) {
         new Thread(() -> {
-            List<org.openjfx.model.User> modelUsers = new ArrayList<>();
-            try {
-                modelUsers = chatHandler.getUsers();
-            } catch (IOException e) {
-                System.err.println("Failed to fetch users for new conversation: " + e.getMessage());
-            }
-            
-            final List<org.openjfx.model.User> users = modelUsers;
+            // Clear the old data and load the new data in the background
+            allContacts.clear();
+            loadData();
+
+            // Once data is ready, schedule a single UI update on the FX thread
             Platform.runLater(() -> {
-                for (String pid : evt.participantIds) {
-                    for (org.openjfx.model.User mu : users) {
-                        if (mu.id.equals(pid)) {
-                            c.participants.add(new User(mu.id, mu.username, mu.displayName, mu.isOnline));
-                            break;
-                        }
-                    }
-                }
-                
-                // Determine online status for 1-on-1
-                if (!c.isGroup && !c.participants.isEmpty()) {
-                    String myId = ClientState.getInstance().getCurrentUserId();
-                    for (User u : c.participants) {
-                        if (!u.id.equals(myId)) {
-                            c.isOnline = u.isOnline;
-                            break;
-                        }
-                    }
-                }
-                
-                allContacts.add(0, c);
                 renderContactList(allContacts);
-                System.out.println("DEBUG: Added new conversation to UI: " + c.name);
             });
         }).start();
+    }
+
+    private void handleNewConversation(String json) {
+        System.out.println("DEBUG: New conversation detected, reloading all conversations.");
+        handleReloadConversations(json);
     }
 
     private void handleIncomingMessage(String json) {
@@ -633,6 +611,7 @@ public class ChatScene extends Scene {
         removeBtn.setOnAction(e -> {
             List<User> selected
                     = new ArrayList<>(membersList.getSelectionModel().getSelectedItems());
+                    //HERE
             if (!selected.isEmpty()) {
                 // --- ADDED: Check if the user is removing themselves (Leaving Group)
                 // ---
@@ -645,8 +624,19 @@ public class ChatScene extends Scene {
                     dialog.close();
                     deleteConversation(group);
                 } else {
-                    // Removing other participants
-                    group.participants.removeAll(selected);
+                    new Thread(() -> {
+                        List<String> removedUserIds = new ArrayList<>();
+                        for (User u : selected) {
+                            try {
+                                chatHandler.removeParticipantFromGroup(group.id, u.id);
+                                removedUserIds.add(u.id);
+                            } catch (IOException ex) {
+                                Platform.runLater(() -> System.err.println("Failed to remove " + u.displayName));
+                                ex.printStackTrace();
+                            }
+                        }
+                    }).start();
+                }
 
                     // Refresh list keeping "You" at the top
                     List<User> updatedList = new ArrayList<>();
@@ -656,10 +646,8 @@ public class ChatScene extends Scene {
                     countLabel.setText((group.participants.size() + 1) + (" participant"
                             + "s"));
                     updateChatHeader(group);
-
                     removeBtn.setDisable(true);
                 }
-            }
         });
 
         HBox buttonBox = new HBox(15, addBtn, removeBtn);
@@ -1480,9 +1468,11 @@ public class ChatScene extends Scene {
                 try {
                     if (isGroup) {
                         chatHandler.sendToGroup(convId, myId, msgContent);
+                        chatHandler.getMessages(convId);
                     } else {
                         if (recipientId != null) {
                             chatHandler.sendDM(convId, myId, msgContent, recipientId);
+                            chatHandler.getMessages(convId);
                             System.out.println("Message sent request sent.");
                         } else {
                             System.err.println("Cannot send DM: Recipient not found in contact.");

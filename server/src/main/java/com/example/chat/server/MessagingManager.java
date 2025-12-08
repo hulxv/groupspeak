@@ -227,4 +227,23 @@ public class MessagingManager {
             }
         }
     }
+
+    public static void notifyReloadConversations(String userId) {
+        String message = "{\"type\":\"reload_conversations\",\"userId\":\"" + ProtocolParser.escape(userId) + "\"}";
+
+        // Find the client(s) for the target user and send the notification
+        List<ClientHandler> handlers = userConnections.get(userId);
+        if (handlers != null && !handlers.isEmpty()) {
+            // Iterate over a copy to avoid ConcurrentModificationException
+            for (ClientHandler h : new ArrayList<>(handlers)) {
+                try {
+                    h.sendMessage(message);
+                    System.out.println("MessagingManager: Sent reload_conversations notification to " + userId);
+                } catch (Exception e) {
+                    System.err.println("MessagingManager: Failed to notify user " + userId 
+                        + " to reload conversations: " + e.getMessage());
+                }
+            }
+        }
+    }
 }
